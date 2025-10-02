@@ -1,0 +1,3 @@
+Build path: /Users/k20040806alexeigmail.com/Documents/Builds/Rabbit/untitled folder/Rabbit2
+Build number: 2
+PluginYG version: 2.005

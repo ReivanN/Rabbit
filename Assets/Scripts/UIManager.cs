@@ -43,14 +43,34 @@ public class UIManager : MonoBehaviour
     private Sequence gameOverSequence;
     private Sequence pauseSequence;
 
-    // Ссылка на GameManager для управления паузой
     private GameManager gameManager;
+    private bool isPauseMenuShowing = false;
+    private bool isGameOverShowing = false;
+
+    // Компоненты для принудительного включения
+    private CanvasScaler gameOverCanvasScaler;
+    private GraphicRaycaster gameOverRaycaster;
+    private CanvasScaler pauseCanvasScaler;
+    private GraphicRaycaster pauseRaycaster;
 
     private void Start()
     {
         InitializeUI();
         SetupButtonListeners();
         gameManager = FindObjectOfType<GameManager>();
+        
+        // Получаем компоненты для принудительного включения
+        gameOverCanvasScaler = gameOverPanel.GetComponent<CanvasScaler>();
+        gameOverRaycaster = gameOverPanel.GetComponent<GraphicRaycaster>();
+        pauseCanvasScaler = pausePanel.GetComponent<CanvasScaler>();
+        pauseRaycaster = pausePanel.GetComponent<GraphicRaycaster>();
+        
+        // Гарантируем, что игровой UI интерактивен
+        if (inGameUICanvasGroup != null)
+        {
+            inGameUICanvasGroup.blocksRaycasts = true;
+            inGameUICanvasGroup.interactable = true;
+        }
     }
 
     private void InitializeUI()
@@ -66,25 +86,10 @@ public class UIManager : MonoBehaviour
             originalPausePanelScale = pausePanelRect.localScale;
         }
 
-        // Скрываем панель Game Over с начальными значениями
-        if (gameOverCanvasGroup != null)
-        {
-            gameOverCanvasGroup.alpha = 0f;
-            //gameOverCanvasGroup.interactable = false;
-            //gameOverCanvasGroup.blocksRaycasts = false;
-        }
-
+        // Сбрасываем scale панелей
         if (gameOverPanelRect != null)
         {
             gameOverPanelRect.localScale = Vector3.zero;
-        }
-
-        // Скрываем панель Pause с начальными значениями
-        if (pauseCanvasGroup != null)
-        {
-            pauseCanvasGroup.alpha = 0f;
-            //pauseCanvasGroup.interactable = false;
-            //pauseCanvasGroup.blocksRaycasts = false;
         }
 
         if (pausePanelRect != null)
@@ -105,45 +110,35 @@ public class UIManager : MonoBehaviour
         if (inGameUICanvasGroup != null)
         {
             inGameUICanvasGroup.alpha = 1f;
+            inGameUICanvasGroup.blocksRaycasts = true;
+            inGameUICanvasGroup.interactable = true;
         }
     }
 
     private void SetupButtonListeners()
     {
         // Game Over кнопки
-        restartButton.onClick.AddListener(RestartGame);
-        menuButton.onClick.AddListener(ReturnToMenu);
+        if (restartButton != null)
+            restartButton.onClick.AddListener(RestartGame);
+        if (menuButton != null)
+            menuButton.onClick.AddListener(ReturnToMenu);
 
         // Pause кнопки
-        resumeButton.onClick.AddListener(ResumeGame);
-        pauseRestartButton.onClick.AddListener(RestartGame);
-        pauseMenuButton.onClick.AddListener(ReturnToMenu);
-
-        // Добавляем анимации наведения на кнопки
-        SetupButtonHoverEffects(restartButton);
-        SetupButtonHoverEffects(menuButton);
-        SetupButtonHoverEffects(resumeButton);
-        SetupButtonHoverEffects(pauseRestartButton);
-        SetupButtonHoverEffects(pauseMenuButton);
-    }
-
-    private void SetupButtonHoverEffects(Button button)
-    {
-        var buttonTransform = button.GetComponent<RectTransform>();
-        var originalScale = buttonTransform.localScale;
-
-        // Анимация при наведении
-        button.onClick.AddListener(() => PlayButtonClickAnimation(buttonTransform));
+        if (resumeButton != null)
+            resumeButton.onClick.AddListener(ResumeGame);
+        if (pauseRestartButton != null)
+            pauseRestartButton.onClick.AddListener(RestartGame);
+        if (pauseMenuButton != null)
+            pauseMenuButton.onClick.AddListener(ReturnToMenu);
     }
 
     private void Update()
     {
-        // Обработка ввода для паузы
         if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.P))
         {
-            if (gameManager != null && !gameManager.IsGameOver)
+            if (gameManager != null && !gameManager.IsGameOver && !isGameOverShowing)
             {
-                if (gameManager.IsGamePaused)
+                if (isPauseMenuShowing)
                 {
                     ResumeGame();
                 }
@@ -157,6 +152,26 @@ public class UIManager : MonoBehaviour
 
     public void ShowGameOver(int finalScore)
     {
+        if (isGameOverShowing) return;
+        
+        isGameOverShowing = true;
+        
+        // Скрываем паузу если она была показана
+        if (isPauseMenuShowing)
+        {
+            HidePauseMenu();
+        }
+
+        // Включаем блокировку raycast'ов ДО активации панели
+        if (gameOverCanvasGroup != null)
+        {
+            gameOverCanvasGroup.blocksRaycasts = true;
+            gameOverCanvasGroup.interactable = true;
+        }
+        
+        // ПРИНУДИТЕЛЬНО включаем компоненты
+        ForceEnableCanvasComponents(gameOverPanel, gameOverCanvasScaler, gameOverRaycaster);
+        
         gameOverPanel.SetActive(true);
         
         // Останавливаем предыдущую анимацию если она есть
@@ -172,20 +187,25 @@ public class UIManager : MonoBehaviour
         // 1. Затемнение фона
         if (backgroundOverlay != null)
         {
-            gameOverSequence.Join(backgroundOverlay.DOFade(0.7f, fadeDuration).SetEase(fadeEase));
+            gameOverSequence.Join(backgroundOverlay.DOFade(0.7f, fadeDuration)
+                .SetEase(fadeEase)
+                .SetUpdate(true));
         }
 
         // 2. Появление панели с scale анимацией
         if (gameOverPanelRect != null)
         {
             gameOverSequence.Join(gameOverPanelRect.DOScale(originalPanelScale, panelScaleDuration)
-                .SetEase(scaleEase));
+                .SetEase(scaleEase)
+                .SetUpdate(true));
         }
 
         // 3. Fade in всей панели
         if (gameOverCanvasGroup != null)
         {
-            gameOverSequence.Join(gameOverCanvasGroup.DOFade(1f, fadeDuration).SetEase(fadeEase));
+            gameOverSequence.Join(gameOverCanvasGroup.DOFade(1f, fadeDuration)
+                .SetEase(fadeEase)
+                .SetUpdate(true));
         }
 
         // 4. Анимация текста счета (постепенное появление)
@@ -195,25 +215,31 @@ public class UIManager : MonoBehaviour
         gameOverSequence.AppendInterval(textTypingDuration + 0.3f);
         gameOverSequence.AppendCallback(() => AnimateButtons());
 
-        // Включаем интерактивность после анимации
-        gameOverSequence.OnComplete(() =>
-        {
-            if (gameOverCanvasGroup != null)
-            {
-                gameOverCanvasGroup.interactable = true;
-                gameOverCanvasGroup.blocksRaycasts = true;
-            }
-        });
-
         // Скрываем игровой UI
-        if (inGameUICanvasGroup != null)
+        /*if (inGameUICanvasGroup != null)
         {
-            inGameUICanvasGroup.DOFade(0f, fadeDuration * 0.5f).SetEase(fadeEase);
-        }
+            inGameUICanvasGroup.DOFade(0f, fadeDuration * 0.5f)
+                .SetEase(fadeEase)
+                .SetUpdate(true);
+        }*/
     }
 
     public void ShowPauseMenu()
     {
+        if (isPauseMenuShowing || isGameOverShowing) return;
+        
+        isPauseMenuShowing = true;
+        
+        // Включаем блокировку raycast'ов ДО активации панели
+        if (pauseCanvasGroup != null)
+        {
+            pauseCanvasGroup.blocksRaycasts = true;
+            pauseCanvasGroup.interactable = true;
+        }
+        
+        // ПРИНУДИТЕЛЬНО включаем компоненты
+        ForceEnableCanvasComponents(pausePanel, pauseCanvasScaler, pauseRaycaster);
+        
         pausePanel.SetActive(true);
         
         // Останавливаем предыдущую анимацию если она есть
@@ -229,46 +255,118 @@ public class UIManager : MonoBehaviour
         // 1. Затемнение фона
         if (backgroundOverlay != null)
         {
-            pauseSequence.Join(backgroundOverlay.DOFade(0.7f, fadeDuration).SetEase(fadeEase));
+            pauseSequence.Join(backgroundOverlay.DOFade(0.7f, fadeDuration)
+                .SetEase(fadeEase)
+                .SetUpdate(true));
         }
 
         // 2. Появление панели с scale анимацией
         if (pausePanelRect != null)
         {
             pauseSequence.Join(pausePanelRect.DOScale(originalPausePanelScale, panelScaleDuration)
-                .SetEase(scaleEase));
+                .SetEase(scaleEase)
+                .SetUpdate(true));
         }
 
         // 3. Fade in всей панели
         if (pauseCanvasGroup != null)
         {
-            pauseSequence.Join(pauseCanvasGroup.DOFade(1f, fadeDuration).SetEase(fadeEase));
+            pauseSequence.Join(pauseCanvasGroup.DOFade(1f, fadeDuration)
+                .SetEase(fadeEase)
+                .SetUpdate(true));
         }
 
         // 4. Анимация кнопок с задержкой
         pauseSequence.AppendCallback(() => AnimatePauseButtons());
 
-        // Включаем интерактивность после анимации
-        pauseSequence.OnComplete(() =>
-        {
-            if (pauseCanvasGroup != null)
-            {
-                pauseCanvasGroup.interactable = true;
-                pauseCanvasGroup.blocksRaycasts = true;
-            }
-        });
-
         // Слегка затемняем игровой UI
         if (inGameUICanvasGroup != null)
         {
-            inGameUICanvasGroup.DOFade(0.7f, fadeDuration * 0.5f).SetEase(fadeEase);
+            inGameUICanvasGroup.DOFade(0.7f, fadeDuration * 0.5f)
+                .SetEase(fadeEase)
+                .SetUpdate(true);
         }
+    }
+
+    // ВАЖНЫЙ МЕТОД: Принудительное включение компонентов Canvas
+    private void ForceEnableCanvasComponents(GameObject panel, CanvasScaler scaler, GraphicRaycaster raycaster)
+    {
+        // Принудительно активируем панель и все её дочерние элементы
+        panel.SetActive(true);
+        
+        // Включаем и принудительно обновляем все компоненты Canvas
+        Canvas canvas = panel.GetComponent<Canvas>();
+        if (canvas != null)
+        {
+            canvas.enabled = false;
+            canvas.enabled = true;
+            canvas.overrideSorting = true;
+            canvas.sortingOrder = 1000; // Высокий приоритет
+        }
+        
+        if (scaler != null)
+        {
+            scaler.enabled = false;
+            scaler.enabled = true;
+        }
+        
+        if (raycaster != null)
+        {
+            raycaster.enabled = false;
+            raycaster.enabled = true;
+        }
+        
+        // Принудительно включаем все кнопки и делаем их интерактивными
+        Button[] buttons = panel.GetComponentsInChildren<Button>(true);
+        foreach (Button button in buttons)
+        {
+            button.enabled = false;
+            button.enabled = true;
+            button.interactable = true;
+            
+            // Принудительно обновляем навигацию
+            Navigation nav = button.navigation;
+            button.navigation = nav;
+        }
+
+        // Принудительно обновляем все layout'ы
+        LayoutGroup[] layouts = panel.GetComponentsInChildren<LayoutGroup>(true);
+        foreach (LayoutGroup layout in layouts)
+        {
+            LayoutRebuilder.ForceRebuildLayoutImmediate(layout.GetComponent<RectTransform>());
+        }
+
+        // Принудительное обновление EventSystem
+        StartCoroutine(ForceUpdateEventSystem());
+    }
+
+    private IEnumerator ForceUpdateEventSystem()
+    {
+        yield return null;
+        
+        var eventSystem = UnityEngine.EventSystems.EventSystem.current;
+        if (eventSystem != null)
+        {
+            eventSystem.UpdateModules();
+            eventSystem.SetSelectedGameObject(null);
+        }
+        
+        Canvas.ForceUpdateCanvases();
     }
 
     public void HidePauseMenu()
     {
+        if (!isPauseMenuShowing) return;
+        
         // Останавливаем анимации
         pauseSequence?.Kill();
+
+        // Отключаем блокировку raycast'ов
+        if (pauseCanvasGroup != null)
+        {
+            pauseCanvasGroup.blocksRaycasts = false;
+            pauseCanvasGroup.interactable = false;
+        }
 
         Sequence hideSequence = DOTween.Sequence();
         hideSequence.SetUpdate(true);
@@ -304,10 +402,13 @@ public class UIManager : MonoBehaviour
         hideSequence.OnComplete(() =>
         {
             pausePanel.SetActive(false);
-            if (pauseCanvasGroup != null)
+            isPauseMenuShowing = false;
+            
+            // Восстанавливаем игровой UI
+            if (inGameUICanvasGroup != null)
             {
-                pauseCanvasGroup.interactable = false;
-                pauseCanvasGroup.blocksRaycasts = false;
+                inGameUICanvasGroup.blocksRaycasts = true;
+                inGameUICanvasGroup.interactable = true;
             }
         });
     }
@@ -317,8 +418,8 @@ public class UIManager : MonoBehaviour
         if (gameOverCanvasGroup != null)
         {
             gameOverCanvasGroup.alpha = 0f;
-            gameOverCanvasGroup.interactable = false;
-            gameOverCanvasGroup.blocksRaycasts = false;
+            gameOverCanvasGroup.blocksRaycasts = true;
+            gameOverCanvasGroup.interactable = true;
         }
 
         if (gameOverPanelRect != null)
@@ -332,11 +433,14 @@ public class UIManager : MonoBehaviour
         }
 
         // Сбрасываем кнопки
-        restartButton.transform.localScale = Vector3.zero;
-        menuButton.transform.localScale = Vector3.zero;
+        if (restartButton != null)
+            restartButton.transform.localScale = Vector3.zero;
+        if (menuButton != null)
+            menuButton.transform.localScale = Vector3.zero;
 
         // Сбрасываем текст
-        finalScoreText.text = "";
+        if (finalScoreText != null)
+            finalScoreText.text = "";
         if (gameOverTitleText != null)
         {
             gameOverTitleText.alpha = 0f;
@@ -348,8 +452,8 @@ public class UIManager : MonoBehaviour
         if (pauseCanvasGroup != null)
         {
             pauseCanvasGroup.alpha = 0f;
-            pauseCanvasGroup.interactable = false;
-            pauseCanvasGroup.blocksRaycasts = false;
+            pauseCanvasGroup.blocksRaycasts = true;
+            pauseCanvasGroup.interactable = true;
         }
 
         if (pausePanelRect != null)
@@ -363,9 +467,12 @@ public class UIManager : MonoBehaviour
         }
 
         // Сбрасываем кнопки
-        resumeButton.transform.localScale = Vector3.zero;
-        pauseRestartButton.transform.localScale = Vector3.zero;
-        pauseMenuButton.transform.localScale = Vector3.zero;
+        if (resumeButton != null)
+            resumeButton.transform.localScale = Vector3.zero;
+        if (pauseRestartButton != null)
+            pauseRestartButton.transform.localScale = Vector3.zero;
+        if (pauseMenuButton != null)
+            pauseMenuButton.transform.localScale = Vector3.zero;
     }
 
     private IEnumerator AnimateScoreText(int finalScore)
@@ -373,85 +480,110 @@ public class UIManager : MonoBehaviour
         // Анимация заголовка
         if (gameOverTitleText != null)
         {
-            gameOverTitleText.DOFade(1f, 0.5f).SetEase(fadeEase);
-            yield return new WaitForSeconds(0.2f);
+            gameOverTitleText.DOFade(1f, 0.5f)
+                .SetEase(fadeEase)
+                .SetUpdate(true);
+            yield return new WaitForSecondsRealtime(0.2f);
         }
 
         // Анимация набора текста счета
-        finalScoreText.text = "0";
-        int currentScore = 0;
-        float scoreProgress = 0f;
-
-        while (currentScore < finalScore)
+        if (finalScoreText != null)
         {
-            scoreProgress += Time.unscaledDeltaTime / textTypingDuration;
-            currentScore = Mathf.FloorToInt(Mathf.Lerp(0, finalScore, scoreProgress));
-            finalScoreText.text = $"SCORE: {currentScore}";
+            finalScoreText.text = "0";
+            int currentScore = 0;
+            float scoreProgress = 0f;
 
-            // Добавляем эффект "прыжка" для цифр
-            if (currentScore % 5 == 0 || currentScore == finalScore)
+            while (currentScore < finalScore)
             {
-                finalScoreText.transform.DOScale(1.1f, 0.1f)
-                    .SetLoops(2, LoopType.Yoyo)
-                    .SetUpdate(true);
+                scoreProgress += Time.unscaledDeltaTime / textTypingDuration;
+                currentScore = Mathf.FloorToInt(Mathf.Lerp(0, finalScore, scoreProgress));
+                finalScoreText.text = $"SCORE: {currentScore}";
+
+                // Добавляем эффект "прыжка" для цифр
+                if (currentScore % 5 == 0 || currentScore == finalScore)
+                {
+                    finalScoreText.transform.DOScale(1.1f, 0.1f)
+                        .SetLoops(2, LoopType.Yoyo)
+                        .SetUpdate(true);
+                }
+
+                yield return null;
             }
 
-            yield return null;
+            // Финальное значение
+            finalScoreText.text = $"SCORE: {finalScore}";
         }
-
-        // Финальное значение
-        finalScoreText.text = $"SCORE: {finalScore}";
     }
 
     private void AnimateButtons()
     {
         // Анимация кнопки рестарта
-        restartButton.transform.DOScale(Vector3.one, panelScaleDuration * 0.7f)
-            .SetEase(scaleEase)
-            .SetUpdate(true);
+        if (restartButton != null)
+        {
+            restartButton.transform.DOScale(Vector3.one, panelScaleDuration * 0.7f)
+                .SetEase(scaleEase)
+                .SetUpdate(true);
+        }
 
         // Анимация кнопки меню с задержкой
-        menuButton.transform.DOScale(Vector3.one, panelScaleDuration * 0.7f)
-            .SetDelay(buttonStaggerDelay)
-            .SetEase(scaleEase)
-            .SetUpdate(true);
+        if (menuButton != null)
+        {
+            menuButton.transform.DOScale(Vector3.one, panelScaleDuration * 0.7f)
+                .SetDelay(buttonStaggerDelay)
+                .SetEase(scaleEase)
+                .SetUpdate(true);
+        }
     }
 
     private void AnimatePauseButtons()
     {
         // Анимация кнопок паузы с задержкой между ними
-        resumeButton.transform.DOScale(Vector3.one, panelScaleDuration * 0.7f)
-            .SetEase(scaleEase)
-            .SetUpdate(true);
+        if (resumeButton != null)
+        {
+            resumeButton.transform.DOScale(Vector3.one, panelScaleDuration * 0.7f)
+                .SetEase(scaleEase)
+                .SetUpdate(true);
+        }
 
-        pauseRestartButton.transform.DOScale(Vector3.one, panelScaleDuration * 0.7f)
-            .SetDelay(buttonStaggerDelay)
-            .SetEase(scaleEase)
-            .SetUpdate(true);
+        if (pauseRestartButton != null)
+        {
+            pauseRestartButton.transform.DOScale(Vector3.one, panelScaleDuration * 0.7f)
+                .SetDelay(buttonStaggerDelay)
+                .SetEase(scaleEase)
+                .SetUpdate(true);
+        }
 
-        pauseMenuButton.transform.DOScale(Vector3.one, panelScaleDuration * 0.7f)
-            .SetDelay(buttonStaggerDelay * 2)
-            .SetEase(scaleEase)
-            .SetUpdate(true);
-    }
-
-    private void PlayButtonClickAnimation(RectTransform buttonTransform)
-    {
-        Sequence clickSequence = DOTween.Sequence();
-        clickSequence.Append(buttonTransform.DOScale(0.9f, 0.1f).SetUpdate(true));
-        clickSequence.Append(buttonTransform.DOScale(1f, 0.1f).SetUpdate(true));
+        if (pauseMenuButton != null)
+        {
+            pauseMenuButton.transform.DOScale(Vector3.one, panelScaleDuration * 0.7f)
+                .SetDelay(buttonStaggerDelay * 2)
+                .SetEase(scaleEase)
+                .SetUpdate(true);
+        }
     }
 
     public void HideGameOver()
     {
+        if (!isGameOverShowing) return;
+        
         // Останавливаем анимации
         gameOverSequence?.Kill();
 
+        // Отключаем блокировку raycast'ов
+        if (gameOverCanvasGroup != null)
+        {
+            gameOverCanvasGroup.blocksRaycasts = false;
+            gameOverCanvasGroup.interactable = false;
+        }
+
         Sequence hideSequence = DOTween.Sequence();
+        hideSequence.SetUpdate(true);
 
         // 1. Исчезновение кнопок
-        hideSequence.Join(restartButton.transform.DOScale(0f, fadeDuration * 0.5f).SetEase(fadeEase));
-        hideSequence.Join(menuButton.transform.DOScale(0f, fadeDuration * 0.5f).SetEase(fadeEase));
+        if (restartButton != null)
+            hideSequence.Join(restartButton.transform.DOScale(0f, fadeDuration * 0.5f).SetEase(fadeEase));
+        if (menuButton != null)
+            hideSequence.Join(menuButton.transform.DOScale(0f, fadeDuration * 0.5f).SetEase(fadeEase));
 
         // 2. Исчезновение панели
         if (gameOverPanelRect != null)
@@ -479,10 +611,13 @@ public class UIManager : MonoBehaviour
         hideSequence.OnComplete(() =>
         {
             gameOverPanel.SetActive(false);
-            if (gameOverCanvasGroup != null)
+            isGameOverShowing = false;
+            
+            // Восстанавливаем игровой UI
+            if (inGameUICanvasGroup != null)
             {
-                gameOverCanvasGroup.interactable = false;
-                gameOverCanvasGroup.blocksRaycasts = false;
+                inGameUICanvasGroup.blocksRaycasts = true;
+                inGameUICanvasGroup.interactable = true;
             }
         });
     }
@@ -491,10 +626,7 @@ public class UIManager : MonoBehaviour
     {
         if (scoreText != null)
         {
-            // Легкая анимация при обновлении счета
-            scoreText.text = $"CARROTS: {score}";
-            scoreText.transform.DOScale(1.1f, 0.2f)
-                .SetLoops(2, LoopType.Yoyo);
+            scoreText.text = $": {score}";
         }
     }
 
@@ -508,67 +640,64 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    private void PauseGame()
+    // ЕДИНЫЙ метод для паузы - вызывается и из кнопки, и из клавиши Esc
+    public void PauseGame()
     {
-        if (gameManager != null)
+        if (gameManager != null && !isPauseMenuShowing && !isGameOverShowing)
         {
             gameManager.SetGamePaused(true);
             ShowPauseMenu();
         }
     }
 
-    private void ResumeGame()
+    // ЕДИНЫЙ метод для возобновления - вызывается и из кнопки, и из клавиши Esc
+    public void ResumeGame()
     {
-        PlayButtonClickAnimation(resumeButton.GetComponent<RectTransform>());
-        
-        // Небольшая задержка для анимации клика
-        DOTween.Sequence()
-            .AppendInterval(0.2f)
-            .OnComplete(() =>
-            {
-                if (gameManager != null)
-                {
-                    gameManager.SetGamePaused(false);
-                    HidePauseMenu();
-                }
-            })
-            .SetUpdate(true);
+        if (gameManager != null && isPauseMenuShowing)
+        {
+            gameManager.SetGamePaused(false);
+            HidePauseMenu();
+        }
     }
 
     private void RestartGame()
     {
-        PlayButtonClickAnimation(restartButton.GetComponent<RectTransform>());
-        
         // Скрываем все UI перед рестартом
-        HideGameOver();
-        HidePauseMenu();
+        if (isGameOverShowing)
+        {
+            HideGameOver();
+        }
+        if (isPauseMenuShowing)
+        {
+            HidePauseMenu();
+        }
         
-        // Небольшая задержка для анимации клика
-        DOTween.Sequence()
-            .AppendInterval(0.3f)
-            .OnComplete(() =>
-            {
-                GameManager gameManager = FindObjectOfType<GameManager>();
-                if (gameManager != null)
-                {
-                    gameManager.RestartGame();
-                }
-            })
-            .SetUpdate(true);
+        // Небольшая задержка для завершения анимаций
+        StartCoroutine(DelayedRestart());
+    }
+
+    private IEnumerator DelayedRestart()
+    {
+        yield return new WaitForSecondsRealtime(0.3f);
+        
+        GameManager gameManager = FindObjectOfType<GameManager>();
+        if (gameManager != null)
+        {
+            gameManager.RestartGame();
+        }
+        
+        // Сбрасываем флаги
+        isGameOverShowing = false;
+        isPauseMenuShowing = false;
     }
 
     private void ReturnToMenu()
     {
-        PlayButtonClickAnimation(menuButton.GetComponent<RectTransform>());
-        
-        // Здесь можно добавить переход в главное меню
         Debug.Log("Return to menu pressed");
-        // SceneManager.LoadScene("MainMenu");
     }
 
     private void OnDestroy()
     {
-        // Очищаем все твины при уничтожении объекта
         DOTween.KillAll();
         
         if (restartButton != null)

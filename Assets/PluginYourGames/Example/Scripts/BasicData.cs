@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -5,7 +6,7 @@ namespace YG.Example
 {
     public class BasicData : MonoBehaviour
     {
-        public Text dataText;
+        public TextMeshProUGUI dataText;
 
         private void OnEnable()
         {

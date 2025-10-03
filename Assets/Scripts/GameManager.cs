@@ -109,7 +109,7 @@ namespace Game.Characters
             // Отменяем таймер игры
             gameTimerCancellationTokenSource?.Cancel();
             
-            DisableAllComponents();
+            //DisableAllComponents();
             rabbit.enabled = false;
             uiManager.ShowGameOver(score);
             
@@ -122,10 +122,9 @@ namespace Game.Characters
             
             if (paused)
             {
-                DisableAllComponents();
+                //DisableAllComponents();
                 rabbit.enabled = false;
                 
-                // При паузе Time.timeScale = 0, поэтому UniTask будет автоматически ждать
                 Time.timeScale = 0f;
             }
             else
@@ -136,7 +135,7 @@ namespace Game.Characters
             }
         }
 
-        private void DisableAllComponents()
+        /*private void DisableAllComponents()
         {
             foreach (var component in activeComponents)
             {
@@ -145,7 +144,7 @@ namespace Game.Characters
                     component.enabled = false;
                 }
             }
-        }
+        }*/
 
         private void EnableAllComponents()
         {

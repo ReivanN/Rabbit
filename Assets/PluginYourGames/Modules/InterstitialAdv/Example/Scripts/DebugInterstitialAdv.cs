@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -5,12 +6,12 @@ namespace YG.Example
 {
     public class DebugInterstitialAdv : MonoBehaviour
     {
-        public Text timerText;
+        public TextMeshProUGUI timerText;
 
         private void Update()
         {
 #if RU_YG2
-            string translate = "Таймер до рекламы: ";
+            string translate = "пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ: ";
 #else
             string translate = "Timer before adv: ";
 #endif

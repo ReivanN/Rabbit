@@ -1,7 +1,8 @@
-using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using Game.Grid;
-using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
+using System.Threading;
 
 namespace Game.Characters
 {
@@ -15,7 +16,7 @@ namespace Game.Characters
         [SerializeField] private UIManager uiManager;
 
         private List<MonoBehaviour> activeComponents = new List<MonoBehaviour>();
-        private Coroutine timerCoroutine;
+        private CancellationTokenSource gameTimerCancellationTokenSource;
         private float gameTime = 0f;
 
         public bool IsGameOver => isGameOver;
@@ -24,7 +25,8 @@ namespace Game.Characters
         private void Start()
         {
             FindAllActiveComponents();
-            timerCoroutine = StartCoroutine(GameTimer());
+            gameTimerCancellationTokenSource = new CancellationTokenSource();
+            GameTimerAsync(gameTimerCancellationTokenSource.Token).Forget();
             uiManager.UpdateScore(score);
         }
 
@@ -38,6 +40,21 @@ namespace Game.Characters
         {
             Carrot.OnCollected -= HandleCarrotCollected;
             Bomb.OnExploded -= HandleBombExploded;
+        }
+
+        private async UniTaskVoid GameTimerAsync(CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested && !isGameOver)
+            {
+                if (!isGamePaused)
+                {
+                    gameTime += Time.deltaTime;
+                    uiManager.UpdateTimer(gameTime);
+                }
+                
+                // Ждем один кадр, учитывая паузу
+                await UniTask.NextFrame(cancellationToken);
+            }
         }
 
         private void FindAllActiveComponents()
@@ -57,19 +74,6 @@ namespace Game.Characters
                 {
                     activeComponents.Add(obj);
                 }
-            }
-        }
-
-        private IEnumerator GameTimer()
-        {
-            while (!isGameOver)
-            {
-                if (!isGamePaused)
-                {
-                    gameTime += Time.deltaTime;
-                    uiManager.UpdateTimer(gameTime);
-                }
-                yield return null;
             }
         }
 
@@ -102,8 +106,8 @@ namespace Game.Characters
         {
             isGameOver = true;
             
-            if (timerCoroutine != null)
-                StopCoroutine(timerCoroutine);
+            // Отменяем таймер игры
+            gameTimerCancellationTokenSource?.Cancel();
             
             DisableAllComponents();
             rabbit.enabled = false;
@@ -120,9 +124,13 @@ namespace Game.Characters
             {
                 DisableAllComponents();
                 rabbit.enabled = false;
+                
+                // При паузе Time.timeScale = 0, поэтому UniTask будет автоматически ждать
+                Time.timeScale = 0f;
             }
             else
             {
+                Time.timeScale = 1f;
                 EnableAllComponents();
                 rabbit.enabled = true;
             }
@@ -154,6 +162,12 @@ namespace Game.Characters
         {
             isGameOver = false;
             isGamePaused = false;
+            Time.timeScale = 1f;
+            
+            // Пересоздаем CancellationTokenSource для нового таймера
+            gameTimerCancellationTokenSource?.Cancel();
+            gameTimerCancellationTokenSource?.Dispose();
+            gameTimerCancellationTokenSource = new CancellationTokenSource();
             
             EnableAllComponents();
             uiManager.HideGameOver();
@@ -163,7 +177,9 @@ namespace Game.Characters
                 DifficultyManager.Instance.ResetDifficulty();
     
             score = 0;
+            gameTime = 0f;
             uiManager.UpdateScore(score);
+            uiManager.UpdateTimer(gameTime);
     
             var itemManager = FindObjectOfType<ItemManager>();
             if (itemManager != null)
@@ -176,9 +192,7 @@ namespace Game.Characters
             }
             
             FindAllActiveComponents();
-            if (timerCoroutine != null)
-                StopCoroutine(timerCoroutine);
-            timerCoroutine = StartCoroutine(GameTimer());
+            GameTimerAsync(gameTimerCancellationTokenSource.Token).Forget();
     
             Debug.Log("Игра перезапущена!");
         }
@@ -189,6 +203,12 @@ namespace Game.Characters
             {
                 RestartGame();
             }
+        }
+
+        private void OnDestroy()
+        {
+            gameTimerCancellationTokenSource?.Cancel();
+            gameTimerCancellationTokenSource?.Dispose();
         }
     }
 }

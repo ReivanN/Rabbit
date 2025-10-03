@@ -1,7 +1,8 @@
 using UnityEngine;
 using Game.Grid;
-using System.Collections;
+using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
+using System.Threading;
 
 public class ItemManager : MonoBehaviour
 {
@@ -17,13 +18,17 @@ public class ItemManager : MonoBehaviour
 
     private List<Bomb> activeBombs = new List<Bomb>();
     private List<Carrot> activeCarrots = new List<Carrot>();
-    private Coroutine carrotSpawningCoroutine;
-    private Coroutine bombSpawningCoroutine;
+    private CancellationTokenSource carrotSpawningCancellationTokenSource;
+    private CancellationTokenSource bombSpawningCancellationTokenSource;
 
     private void Start()
     {
-        StartCoroutine(SpawnCarrots());
-        bombSpawningCoroutine = StartCoroutine(SpawnBombs());
+        carrotSpawningCancellationTokenSource = new CancellationTokenSource();
+        bombSpawningCancellationTokenSource = new CancellationTokenSource();
+        
+        SpawnCarrotsAsync(carrotSpawningCancellationTokenSource.Token).Forget();
+        SpawnBombsAsync(bombSpawningCancellationTokenSource.Token).Forget();
+        
         Bomb.OnExploded += HandleBombExploded;
         Carrot.OnCollected += HandleCarrotCollected;
         Carrot.OnExpired += HandleCarrotExpired;
@@ -31,10 +36,11 @@ public class ItemManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (carrotSpawningCoroutine != null)
-            StopCoroutine(carrotSpawningCoroutine);
-        if (bombSpawningCoroutine != null)
-            StopCoroutine(bombSpawningCoroutine);
+        // Отменяем все UniTask'и
+        carrotSpawningCancellationTokenSource?.Cancel();
+        carrotSpawningCancellationTokenSource?.Dispose();
+        bombSpawningCancellationTokenSource?.Cancel();
+        bombSpawningCancellationTokenSource?.Dispose();
         
         Bomb.OnExploded -= HandleBombExploded;
         Carrot.OnCollected -= HandleCarrotCollected;
@@ -57,13 +63,18 @@ public class ItemManager : MonoBehaviour
         }
     }
 
-    private IEnumerator SpawnCarrots()
+    private async UniTaskVoid SpawnCarrotsAsync(CancellationToken cancellationToken)
     {
-        yield return new WaitForSeconds(1f);
+        // Начальная задержка
+        await UniTask.Delay(1000, cancellationToken: cancellationToken);
 
-        while (true)
+        while (!cancellationToken.IsCancellationRequested)
         {
-            yield return new WaitForSeconds(carrotInterval);
+            await UniTask.Delay((int)(carrotInterval * 1000), 
+                cancellationToken: cancellationToken,
+                ignoreTimeScale: false);
+            
+            if (cancellationToken.IsCancellationRequested) break;
             
             if (activeCarrots.Count < maxCarrots)
             {
@@ -76,14 +87,19 @@ public class ItemManager : MonoBehaviour
         }
     }
 
-    private IEnumerator SpawnBombs()
+    private async UniTaskVoid SpawnBombsAsync(CancellationToken cancellationToken)
     {
-        yield return new WaitForSeconds(1f);
+        // Начальная задержка
+        await UniTask.Delay(1000, cancellationToken: cancellationToken);
 
-        while (true)
+        while (!cancellationToken.IsCancellationRequested)
         {
             float currentInterval = DifficultyManager.Instance.CurrentBombInterval;
-            yield return new WaitForSeconds(currentInterval);
+            await UniTask.Delay((int)(currentInterval * 1000), 
+                cancellationToken: cancellationToken,
+                ignoreTimeScale: false);
+            
+            if (cancellationToken.IsCancellationRequested) break;
             
             int bombsToSpawn = DetermineBombsToSpawn();
             
@@ -94,7 +110,9 @@ public class ItemManager : MonoBehaviour
                     TrySpawnBomb();
                     
                     if (i < bombsToSpawn - 1)
-                        yield return new WaitForSeconds(0.1f);
+                    {
+                        await UniTask.Delay(100, cancellationToken: cancellationToken);
+                    }
                 }
             }
         }
@@ -182,6 +200,17 @@ public class ItemManager : MonoBehaviour
 
     public void ResetGame()
     {
+        // Отменяем текущие таски спавна
+        carrotSpawningCancellationTokenSource?.Cancel();
+        bombSpawningCancellationTokenSource?.Cancel();
+        
+        // Пересоздаем CancellationTokenSource для новых тасков
+        carrotSpawningCancellationTokenSource?.Dispose();
+        bombSpawningCancellationTokenSource?.Dispose();
+        
+        carrotSpawningCancellationTokenSource = new CancellationTokenSource();
+        bombSpawningCancellationTokenSource = new CancellationTokenSource();
+
         foreach (var bomb in activeBombs)
         {
             if (bomb != null)
@@ -196,9 +225,9 @@ public class ItemManager : MonoBehaviour
         }
         activeCarrots.Clear();
         
-        if (bombSpawningCoroutine != null)
-            StopCoroutine(bombSpawningCoroutine);
-        bombSpawningCoroutine = StartCoroutine(SpawnBombs());
+        // Перезапускаем спавн
+        SpawnCarrotsAsync(carrotSpawningCancellationTokenSource.Token).Forget();
+        SpawnBombsAsync(bombSpawningCancellationTokenSource.Token).Forget();
     }
 
     public int GetCurrentCarrotCount()

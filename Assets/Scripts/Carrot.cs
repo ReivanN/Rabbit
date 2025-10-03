@@ -1,7 +1,8 @@
 using UnityEngine;
 using Game.Grid;
-using System.Collections;
+using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using System.Threading;
 
 public class Carrot : MonoBehaviour
 {
@@ -15,7 +16,7 @@ public class Carrot : MonoBehaviour
     
     private GridCell currentCell;
     private bool isCollected = false;
-    private Coroutine lifetimeCoroutine;
+    private CancellationTokenSource lifetimeCancellationTokenSource;
     private Sequence carrotAnimationSequence;
 
     public bool IsCollected => isCollected;
@@ -26,17 +27,37 @@ public class Carrot : MonoBehaviour
         transform.SetParent(cell.transform, false);
         transform.localPosition = Vector3.zero;
         
-        // Анимация появления через DoTween
         PlaySpawnAnimation();
             
-        lifetimeCoroutine = StartCoroutine(LifetimeTimer());
+        // Запускаем таймер жизни через UniTask
+        lifetimeCancellationTokenSource = new CancellationTokenSource();
+        LifetimeTimerAsync(lifetimeCancellationTokenSource.Token).Forget();
+    }
+    
+    private async UniTaskVoid LifetimeTimerAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Ждем время жизни, учитывая паузу
+            await UniTask.Delay((int)(lifetime * 1000), 
+                cancellationToken: cancellationToken,
+                ignoreTimeScale: false);
+            
+            if (!cancellationToken.IsCancellationRequested && !isCollected)
+            {
+                Expire();
+            }
+        }
+        catch (System.OperationCanceledException)
+        {
+            // Таск был отменен - это нормально
+        }
     }
     
     private void PlaySpawnAnimation()
     {
         if (carrotModel != null)
         {
-            // Анимация появления - рост из-под земли
             carrotModel.localScale = Vector3.zero;
             carrotModel.localPosition = new Vector3(0, -0.3f, 0);
             
@@ -45,7 +66,6 @@ public class Carrot : MonoBehaviour
                 .Append(carrotModel.DOLocalMoveY(0, 0.5f).SetEase(Ease.OutBack))
                 .Join(carrotModel.DOScale(1f, 0.5f).SetEase(Ease.OutBack))
                 .OnComplete(() => {
-                    // После появления начинаем анимацию левитации
                     StartLevitationAnimation();
                 });
         }
@@ -61,27 +81,15 @@ public class Carrot : MonoBehaviour
         {
             carrotAnimationSequence = DOTween.Sequence();
             
-            // Основная анимация левитации
             carrotAnimationSequence
                 .Append(carrotModel.DOLocalMoveY(levitationHeight, levitationDuration).SetEase(Ease.InOutQuad))
                 .Append(carrotModel.DOLocalMoveY(0, levitationDuration).SetEase(Ease.InOutQuad))
                 .SetLoops(-1, LoopType.Yoyo);
                 
-            // Легкое вращение
             carrotAnimationSequence
                 .Join(carrotModel.DOLocalRotate(new Vector3(0, 360, 0), levitationDuration * 4, RotateMode.LocalAxisAdd)
                 .SetEase(Ease.Linear)
                 .SetLoops(-1, LoopType.Restart));
-        }
-    }
-    
-    private IEnumerator LifetimeTimer()
-    {
-        yield return new WaitForSeconds(lifetime);
-        
-        if (!isCollected)
-        {
-            Expire();
         }
     }
     
@@ -101,11 +109,9 @@ public class Carrot : MonoBehaviour
         
         isCollected = true;
         
-        // Останавливаем таймер
-        if (lifetimeCoroutine != null)
-            StopCoroutine(lifetimeCoroutine);
+        // Отменяем таймер жизни
+        lifetimeCancellationTokenSource?.Cancel();
         
-        // Анимация сбора через DoTween
         PlayCollectAnimation();
     }
     
@@ -113,16 +119,13 @@ public class Carrot : MonoBehaviour
     {
         if (carrotModel != null)
         {
-            // Останавливаем основную анимацию
             carrotAnimationSequence?.Kill();
         
-            // Анимация сбора - прыжок и вращение
             Sequence collectSequence = DOTween.Sequence();
             collectSequence
                 .Append(carrotModel.DOLocalMoveY(1f, 0.5f).SetEase(Ease.OutQuad))
                 .Join(carrotModel.DOScale(1.3f, 0.3f).SetEase(Ease.OutBack))
                 .Join(carrotModel.DOLocalRotate(new Vector3(0, 720, 0), 0.5f, RotateMode.LocalAxisAdd))
-                // Добавляем постепенное уменьшение во время вращения
                 .Join(carrotModel.DOScale(0.5f, 0.5f).SetEase(Ease.InQuad))
                 .Append(carrotModel.DOScale(0f, 0.2f).SetEase(Ease.InBack))
                 .OnComplete(() => {
@@ -152,7 +155,6 @@ public class Carrot : MonoBehaviour
     {
         if (isCollected) return;
         
-        // Анимация исчезновения через DoTween
         PlayExpireAnimation();
     }
     
@@ -160,10 +162,8 @@ public class Carrot : MonoBehaviour
     {
         if (carrotModel != null)
         {
-            // Останавливаем основную анимацию
             carrotAnimationSequence?.Kill();
             
-            // Анимация увядания
             Sequence expireSequence = DOTween.Sequence();
             expireSequence
                 .Append(carrotModel.DOLocalMoveY(-0.5f, 0.8f).SetEase(Ease.InQuad))
@@ -182,7 +182,10 @@ public class Carrot : MonoBehaviour
     
     private void OnDestroy()
     {
-        // Останавливаем все анимации DOTween при уничтожении
+        // Отменяем все UniTask'и
+        lifetimeCancellationTokenSource?.Cancel();
+        lifetimeCancellationTokenSource?.Dispose();
+        
         carrotAnimationSequence?.Kill();
         if (carrotModel != null)
         {

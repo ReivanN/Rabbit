@@ -1,5 +1,6 @@
 using UnityEngine;
-using System.Collections;
+using Cysharp.Threading.Tasks;
+using System.Threading;
 
 public class DifficultyManager : MonoBehaviour
 {
@@ -31,6 +32,7 @@ public class DifficultyManager : MonoBehaviour
     private int currentMaxBombs;
     private int currentBombsPerSpawn;
     private float currentGroupSpawnChance;
+    private CancellationTokenSource difficultyCancellationTokenSource;
 
     public float CurrentBombInterval => currentBombInterval;
     public float CurrentBombLifetime => currentBombLifetime;
@@ -47,7 +49,6 @@ public class DifficultyManager : MonoBehaviour
         }
         Instance = this;
 
-        // Инициализация начальных значений
         currentBombInterval = initialBombInterval;
         currentBombLifetime = maxBombLifetime;
         currentMaxBombs = initialMaxBombs;
@@ -57,36 +58,37 @@ public class DifficultyManager : MonoBehaviour
 
     private void Start()
     {
-        StartCoroutine(IncreaseDifficultyOverTime());
+        difficultyCancellationTokenSource = new CancellationTokenSource();
+        IncreaseDifficultyOverTimeAsync(difficultyCancellationTokenSource.Token).Forget();
     }
 
-    private IEnumerator IncreaseDifficultyOverTime()
+    private async UniTaskVoid IncreaseDifficultyOverTimeAsync(CancellationToken cancellationToken)
     {
-        while (true)
+        while (!cancellationToken.IsCancellationRequested)
         {
-            yield return new WaitForSeconds(difficultyIncreaseInterval);
-            IncreaseDifficulty();
+            // Ждем интервал, учитывая паузу
+            await UniTask.Delay((int)(difficultyIncreaseInterval * 1000), 
+                cancellationToken: cancellationToken,
+                ignoreTimeScale: false);
+            
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                IncreaseDifficulty();
+            }
         }
     }
 
     private void IncreaseDifficulty()
     {
-        // Уменьшаем интервал между спавном бомб
         currentBombInterval = Mathf.Max(minBombInterval, currentBombInterval - bombIntervalDecrease);
-        
-        // Уменьшаем время до взрыва бомб
         currentBombLifetime = Mathf.Max(minBombLifetime, currentBombLifetime - lifetimeDecrease);
-        
-        // Увеличиваем максимальное количество бомб на экране
         currentMaxBombs = Mathf.Min(maxBombsOnScreen, currentMaxBombs + bombLimitIncrease);
         
-        // Увеличиваем количество бомб за спавн (реже чем другие параметры)
-        if (Random.Range(0, 2) == 0) // 50% шанс увеличения
+        if (Random.Range(0, 2) == 0)
         {
             currentBombsPerSpawn = Mathf.Min(maxBombsPerSpawn, currentBombsPerSpawn + bombsPerSpawnIncrease);
         }
         
-        // Увеличиваем шанс группового спавна
         currentGroupSpawnChance = Mathf.Min(0.8f, currentGroupSpawnChance + groupSpawnChanceIncrease);
 
         Debug.Log($"Сложность увеличена! " +
@@ -104,5 +106,11 @@ public class DifficultyManager : MonoBehaviour
         currentMaxBombs = initialMaxBombs;
         currentBombsPerSpawn = initialBombsPerSpawn;
         currentGroupSpawnChance = groupSpawnChance;
+    }
+
+    private void OnDestroy()
+    {
+        difficultyCancellationTokenSource?.Cancel();
+        difficultyCancellationTokenSource?.Dispose();
     }
 }

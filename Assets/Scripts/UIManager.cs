@@ -70,8 +70,8 @@ public class UIManager : MonoBehaviour
         if (gameOverCanvasGroup != null)
         {
             gameOverCanvasGroup.alpha = 0f;
-            gameOverCanvasGroup.interactable = false;
-            gameOverCanvasGroup.blocksRaycasts = false;
+            //gameOverCanvasGroup.interactable = false;
+            //gameOverCanvasGroup.blocksRaycasts = false;
         }
 
         if (gameOverPanelRect != null)
@@ -83,8 +83,8 @@ public class UIManager : MonoBehaviour
         if (pauseCanvasGroup != null)
         {
             pauseCanvasGroup.alpha = 0f;
-            pauseCanvasGroup.interactable = false;
-            pauseCanvasGroup.blocksRaycasts = false;
+            //pauseCanvasGroup.interactable = false;
+            //pauseCanvasGroup.blocksRaycasts = false;
         }
 
         if (pausePanelRect != null)

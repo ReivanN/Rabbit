@@ -1,7 +1,8 @@
 using UnityEngine;
 using Game.Grid;
-using System.Collections;
+using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using System.Threading;
 
 public class Bomb : MonoBehaviour
 {
@@ -17,7 +18,7 @@ public class Bomb : MonoBehaviour
     private GridCell currentCell;
     private GridManager grid;
     private float lifetime;
-    private Coroutine explosionCoroutine;
+    private CancellationTokenSource explosionCancellationTokenSource;
     private Sequence bombAnimationSequence;
 
     public void Init(GridCell cell, GridManager gridManager, float bombLifetime)
@@ -35,24 +36,42 @@ public class Bomb : MonoBehaviour
         // Запускаем основную анимацию бомбы
         StartBombAnimation();
         
-        explosionCoroutine = StartCoroutine(ExplosionTimer());
+        // Запускаем таймер взрыва через UniTask
+        explosionCancellationTokenSource = new CancellationTokenSource();
+        ExplosionTimerAsync(explosionCancellationTokenSource.Token).Forget();
+    }
+    
+    private async UniTaskVoid ExplosionTimerAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Ждем указанное время, учитывая паузу
+            await UniTask.Delay((int)(lifetime * 1000), 
+                cancellationToken: cancellationToken,
+                ignoreTimeScale: false);
+            
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                Explode();
+            }
+        }
+        catch (System.OperationCanceledException)
+        {
+            // Таск был отменен - это нормально
+        }
     }
     
     private void PlaySpawnAnimation()
     {
         if (bombModel != null)
         {
-            // Анимация появления - прыжок из-под земли
             bombModel.localScale = Vector3.zero;
             bombModel.localPosition = new Vector3(0, -0.5f, 0);
             
             Sequence spawnSequence = DOTween.Sequence();
             spawnSequence
                 .Append(bombModel.DOLocalMoveY(0, 0.5f).SetEase(Ease.OutBack))
-                .Join(bombModel.DOScale(1f, 0.5f).SetEase(Ease.OutBack))
-                .OnComplete(() => {
-                    // После появления начинаем основную анимацию
-                });
+                .Join(bombModel.DOScale(1f, 0.5f).SetEase(Ease.OutBack));
         }
     }
     
@@ -62,20 +81,17 @@ public class Bomb : MonoBehaviour
         {
             bombAnimationSequence = DOTween.Sequence();
             
-            // Основная анимация левитации
             bombAnimationSequence
                 .Append(bombModel.DOLocalMoveY(levitationHeight, levitationDuration).SetEase(Ease.InOutQuad))
                 .Append(bombModel.DOLocalMoveY(0, levitationDuration).SetEase(Ease.InOutQuad))
                 .SetLoops(-1, LoopType.Yoyo);
                 
-            // Легкое вращение
             bombAnimationSequence
                 .Join(bombModel.DOLocalRotate(new Vector3(0, 180, 0), levitationDuration * 2, RotateMode.LocalAxisAdd)
                 .SetEase(Ease.Linear)
                 .SetLoops(-1, LoopType.Incremental));
         }
         
-        // Запускаем визуальное предупреждение о скором взрыве
         StartWarningAnimation();
     }
     
@@ -83,62 +99,60 @@ public class Bomb : MonoBehaviour
     {
         if (warningIndicator != null)
         {
-            // Начинаем мигать за 50% времени до взрыва
             float warningStartTime = lifetime * 0.5f;
             
-            DOVirtual.DelayedCall(warningStartTime, () => {
-                // Мигание красным цветом
-                warningIndicator.material.DOColor(Color.red, 0.2f)
-                    .SetLoops(Mathf.RoundToInt((lifetime - warningStartTime) / 0.4f), LoopType.Yoyo)
-                    .SetEase(Ease.InOutQuad);
-            });
+            // Используем UniTask для отложенного вызова
+            StartWarningAsync(warningStartTime).Forget();
         }
         
-        // Увеличение масштаба и ускорение пульсации перед взрывом
         if (bombModel != null)
         {
             float warningStartTime = lifetime * 0.5f;
-            
-            DOVirtual.DelayedCall(warningStartTime, () => {
-                // Увеличиваем масштаб
-                bombModel.DOScale(1.3f, lifetime - warningStartTime).SetEase(Ease.OutQuad);
-                
-                // Ускоряем анимацию левитации
-                bombAnimationSequence?.Kill();
-                bombAnimationSequence = DOTween.Sequence();
-                bombAnimationSequence
-                    .Append(bombModel.DOLocalMoveY(levitationHeight * 1.5f, 0.3f).SetEase(Ease.InOutQuad))
-                    .Append(bombModel.DOLocalMoveY(0, 0.3f).SetEase(Ease.InOutQuad))
-                    .SetLoops(-1, LoopType.Yoyo);
-            });
+            StartModelWarningAsync(warningStartTime).Forget();
         }
     }
     
-    private IEnumerator ExplosionTimer()
+    private async UniTaskVoid StartWarningAsync(float warningStartTime)
     {
-        yield return new WaitForSeconds(lifetime);
-        Explode();
+        await UniTask.Delay((int)(warningStartTime * 1000), ignoreTimeScale: false);
+        
+        if (warningIndicator != null)
+        {
+            warningIndicator.material.DOColor(Color.red, 0.2f)
+                .SetLoops(Mathf.RoundToInt((lifetime - warningStartTime) / 0.4f), LoopType.Yoyo)
+                .SetEase(Ease.InOutQuad);
+        }
+    }
+    
+    private async UniTaskVoid StartModelWarningAsync(float warningStartTime)
+    {
+        await UniTask.Delay((int)(warningStartTime * 1000), ignoreTimeScale: false);
+        
+        if (bombModel != null)
+        {
+            bombModel.DOScale(1.3f, lifetime - warningStartTime).SetEase(Ease.OutQuad);
+            
+            bombAnimationSequence?.Kill();
+            bombAnimationSequence = DOTween.Sequence();
+            bombAnimationSequence
+                .Append(bombModel.DOLocalMoveY(levitationHeight * 1.5f, 0.3f).SetEase(Ease.InOutQuad))
+                .Append(bombModel.DOLocalMoveY(0, 0.3f).SetEase(Ease.InOutQuad))
+                .SetLoops(-1, LoopType.Yoyo);
+        }
     }
     
     private void Explode()
     {
-        // Находим все клетки в радиусе взрыва (4 клетки вокруг)
         GridCell[] affectedCells = GetAffectedCells();
-        
-        // Создаем эффекты взрыва во всех пораженных клетках
         CreateExplosionEffects(affectedCells);
-        
-        // Уведомляем о взрыве
         OnExploded?.Invoke(this, affectedCells);
         
-        // Очищаем клетку
         if (currentCell != null)
         {
             currentCell.HasBomb = false;
             currentCell.SpawnedObject = null;
         }
         
-        // Анимация исчезновения бомбы
         PlayDestroyAnimation();
     }
     
@@ -150,7 +164,6 @@ public class Bomb : MonoBehaviour
         {
             if (cell != null)
             {
-                // Создаем эффект взрыва в центре каждой пораженной клетки
                 Vector3 explosionPosition = cell.transform.position;
                 Instantiate(explosionEffect, explosionPosition, Quaternion.identity);
             }
@@ -159,22 +172,19 @@ public class Bomb : MonoBehaviour
     
     private GridCell[] GetAffectedCells()
     {
-        // Взрыв по 4 клеткам вокруг (крестом)
         if (grid == null || currentCell == null)
             return new GridCell[] { currentCell };
 
         Vector2Int currentCoord = currentCell.Coord;
         var affectedCells = new System.Collections.Generic.List<GridCell>();
         
-        // Добавляем текущую клетку
         affectedCells.Add(currentCell);
         
-        // Добавляем соседние клетки (вверх, вниз, влево, вправо)
         Vector2Int[] directions = {
-            new Vector2Int(0, 1),   // Вверх
-            new Vector2Int(0, -1),  // Вниз
-            new Vector2Int(-1, 0),  // Влево
-            new Vector2Int(1, 0)    // Вправо
+            new Vector2Int(0, 1),
+            new Vector2Int(0, -1),
+            new Vector2Int(-1, 0),
+            new Vector2Int(1, 0)
         };
         
         foreach (var direction in directions)
@@ -194,7 +204,6 @@ public class Bomb : MonoBehaviour
     {
         if (bombModel != null)
         {
-            // Анимация быстрого увеличения и исчезновения
             Sequence destroySequence = DOTween.Sequence();
             destroySequence
                 .Append(bombModel.DOScale(2f, 0.2f).SetEase(Ease.OutQuad))
@@ -211,10 +220,10 @@ public class Bomb : MonoBehaviour
     
     private void OnDestroy()
     {
-        if (explosionCoroutine != null)
-            StopCoroutine(explosionCoroutine);
+        // Отменяем все UniTask'и
+        explosionCancellationTokenSource?.Cancel();
+        explosionCancellationTokenSource?.Dispose();
             
-        // Останавливаем все анимации DOTween
         bombAnimationSequence?.Kill();
         if (bombModel != null)
         {

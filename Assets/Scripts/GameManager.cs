@@ -22,13 +22,25 @@ namespace Game.Characters
 
         public bool IsGameOver => isGameOver;
         public bool IsGamePaused => isGamePaused;
-
+        
+        private async UniTaskVoid PreloadExplosions()
+        {
+            var pool = ExplosionEffectPool.Instance;
+            // Активируем и сразу деактивируем все эффекты для предзагрузки
+            for (int i = 0; i < 5; i++)
+            {
+                var effect = pool.GetExplosionEffect(Vector3.zero);
+                await UniTask.DelayFrame(1);
+                pool.ReturnExplosionEffect(effect);
+            }
+        }
         private void Start()
         {
             FindAllActiveComponents();
             gameTimerCancellationTokenSource = new CancellationTokenSource();
             GameTimerAsync(gameTimerCancellationTokenSource.Token).Forget();
             uiManager.UpdateScore(score);
+            PreloadExplosions().Forget();
         }
 
         private void OnEnable()

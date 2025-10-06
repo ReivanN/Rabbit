@@ -21,8 +21,14 @@ public class Bomb : MonoBehaviour
     private CancellationTokenSource explosionCancellationTokenSource;
     private Sequence bombAnimationSequence;
 
+    [Header("Sounds")] 
+    [SerializeField] private AudioSource source;
+    [SerializeField] private AudioClip explode;
+    
+
     public void Init(GridCell cell, GridManager gridManager, float bombLifetime)
     {
+        source = GetComponent<AudioSource>();
         currentCell = cell;
         grid = gridManager;
         lifetime = bombLifetime;
@@ -159,15 +165,38 @@ public class Bomb : MonoBehaviour
     private void CreateExplosionEffects(GridCell[] affectedCells)
     {
         if (explosionEffect == null) return;
-        
+    
+        // Получаем пул из менеджера
+        var explosionPool = ExplosionEffectPool.Instance;
+    
         foreach (GridCell cell in affectedCells)
         {
             if (cell != null)
             {
                 Vector3 explosionPosition = cell.transform.position;
-                Instantiate(explosionEffect, explosionPosition, Quaternion.identity);
+                var explosion = explosionPool.GetExplosionEffect(explosionPosition);
+            
+                // Автоматически возвращаем в пул после завершения
+                ReturnExplosionAfterPlay(explosion).Forget();
             }
         }
+    }
+
+    private async UniTaskVoid ReturnExplosionAfterPlay(GameObject explosion)
+    {
+        var ps = explosion.GetComponent<ParticleSystem>();
+        if (ps != null)
+        {
+            // Ждем завершения партиклов
+            await UniTask.WaitUntil(() => !ps.IsAlive(true));
+        }
+        else
+        {
+            // Фолбэк: ждем 2 секунды для простых эффектов
+            await UniTask.Delay(2000);
+        }
+    
+        ExplosionEffectPool.Instance.ReturnExplosionEffect(explosion);
     }
     
     private GridCell[] GetAffectedCells()
@@ -200,23 +229,37 @@ public class Bomb : MonoBehaviour
         return affectedCells.ToArray();
     }
     
-    private void PlayDestroyAnimation()
+    private CancellationTokenSource _cancellationTokenSource;
+    private int soundDelayBeforeExplosion = 1;
+
+    public async UniTask PlayDestroyAnimation()
     {
         if (bombModel != null)
         {
+            AudioManager.Instance.PlaySFX(explode, source);
+            
+            await UniTask.Delay((int)(soundDelayBeforeExplosion * 1000));
+            
             Sequence destroySequence = DOTween.Sequence();
             destroySequence
                 .Append(bombModel.DOScale(2f, 0.2f).SetEase(Ease.OutQuad))
-                .Append(bombModel.DOScale(0f, 0.1f).SetEase(Ease.InQuad))
-                .OnComplete(() => {
-                    Destroy(gameObject);
-                });
+                .Append(bombModel.DOScale(0f, 0.1f).SetEase(Ease.InQuad));
+            
+            await UniTask.Delay(100);
+
+            float remainingTime = explode.length - soundDelayBeforeExplosion - 0.1f;
+            /*if (remainingTime > 0)
+            {
+                await UniTask.Delay((int)(remainingTime * 1000));
+            }*/
+            Destroy(gameObject);
         }
         else
         {
             Destroy(gameObject);
         }
     }
+
     
     private void OnDestroy()
     {

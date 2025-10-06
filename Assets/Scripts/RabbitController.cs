@@ -67,7 +67,7 @@ namespace Game.Characters
         private IEnumerator MoveToCell(GridCell targetCell)
         {
             isMoving = true;
-
+            AudioManager.Instance.PlaySFX(jumpSound, Audio);
             Vector3 startWorld = transform.position;
             Vector3 endWorld = gridManager.CellWorldPosition(targetCell.Coord);
 
@@ -108,7 +108,7 @@ namespace Game.Characters
             if (carrot != null && !carrot.IsCollected)
             {
                 carrot.Collect();
-                Audio.PlayOneShot(pickUpCarrotSound);
+                AudioManager.Instance.PlaySFX(pickUpCarrotSound, Audio);
             }
         }
 

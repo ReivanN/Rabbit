@@ -25,6 +25,7 @@ public class MainMenu : MonoBehaviour
 
     private void Start()
     {
+        Time.timeScale = 1f;
         InitializeButtons();
         InitializeOptionsPanel();
         InitializeAudioSettingsUI();

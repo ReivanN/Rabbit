@@ -4,6 +4,7 @@ using TMPro;
 using DG.Tweening;
 using System.Collections;
 using Game.Characters;
+using UnityEngine.SceneManagement;
 
 public class UIManager : MonoBehaviour
 {
@@ -11,8 +12,8 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private CanvasGroup gameOverCanvasGroup;
     [SerializeField] private RectTransform gameOverPanelRect;
-    [SerializeField] private TextMeshProUGUI finalScoreText;
-    [SerializeField] private TextMeshProUGUI gameOverTitleText;
+    [SerializeField] private Text finalScoreText;
+    [SerializeField] private Text gameOverTitleText;
     [SerializeField] private Button restartButton;
     [SerializeField] private Button menuButton;
     [SerializeField] private Image backgroundOverlay;
@@ -26,8 +27,8 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Button pauseMenuButton;
 
     [Header("In-Game UI")]
-    [SerializeField] private TextMeshProUGUI scoreText;
-    [SerializeField] private TextMeshProUGUI timerText;
+    [SerializeField] private Text scoreText;
+    [SerializeField] private Text timerText;
     [SerializeField] private CanvasGroup inGameUICanvasGroup;
 
     [Header("Animation Settings")]
@@ -443,7 +444,9 @@ public class UIManager : MonoBehaviour
             finalScoreText.text = "";
         if (gameOverTitleText != null)
         {
-            gameOverTitleText.alpha = 0f;
+            var color = gameOverTitleText.color;
+            color.a = 0f;
+            gameOverTitleText.color = color;
         }
     }
 
@@ -693,7 +696,7 @@ public class UIManager : MonoBehaviour
 
     private void ReturnToMenu()
     {
-        Debug.Log("Return to menu pressed");
+        SceneManager.LoadScene(0);
     }
 
     private void OnDestroy()

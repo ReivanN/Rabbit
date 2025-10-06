@@ -3,6 +3,7 @@ using UnityEngine;
 using Game.Grid;
 using Cysharp.Threading.Tasks;
 using System.Threading;
+using YG;
 
 namespace Game.Characters
 {
@@ -112,8 +113,8 @@ namespace Game.Characters
             //DisableAllComponents();
             rabbit.enabled = false;
             uiManager.ShowGameOver(score);
-            
-            Debug.Log("Game Over! Final Score: " + score);
+            YG2.InterstitialAdvShow();
+            Debug.Log("Game Over!  Final Score: " + score);
         }
 
         public void SetGamePaused(bool paused)
@@ -162,37 +163,41 @@ namespace Game.Characters
             isGameOver = false;
             isGamePaused = false;
             Time.timeScale = 1f;
-            
-            // Пересоздаем CancellationTokenSource для нового таймера
+    
             gameTimerCancellationTokenSource?.Cancel();
             gameTimerCancellationTokenSource?.Dispose();
             gameTimerCancellationTokenSource = new CancellationTokenSource();
-            
+    
             EnableAllComponents();
             uiManager.HideGameOver();
             uiManager.HidePauseMenu();
-            
+    
             if (DifficultyManager.Instance != null)
                 DifficultyManager.Instance.ResetDifficulty();
-    
+
             score = 0;
             gameTime = 0f;
             uiManager.UpdateScore(score);
             uiManager.UpdateTimer(gameTime);
-    
+
             var itemManager = FindObjectOfType<ItemManager>();
             if (itemManager != null)
                 itemManager.ResetGame();
-    
+
+            // Добавьте сброс сетки
+            var gridManager = FindObjectOfType<GridManager>();
+            if (gridManager != null)
+                gridManager.ResetGrid();
+
             if (rabbit != null)
             {
                 rabbit.Respawn();
                 rabbit.enabled = true;
             }
-            
+    
             FindAllActiveComponents();
             GameTimerAsync(gameTimerCancellationTokenSource.Token).Forget();
-    
+
             Debug.Log("Игра перезапущена!");
         }
 

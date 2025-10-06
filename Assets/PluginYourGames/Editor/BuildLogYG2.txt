@@ -1,3 +1,3 @@
-Build path: /Users/k20040806alexeigmail.com/Documents/Builds/Rabbit/Rabbit/build2/Rabbit2
-Build number: 6
+Build path: /Users/k20040806alexeigmail.com/Documents/Builds/Rabbit/PreTestRabbit/build1/Rabbit2
+Build number: 10
 PluginYG version: 2.005

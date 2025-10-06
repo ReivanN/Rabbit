@@ -27,6 +27,15 @@ namespace Game.Grid
         {
             if (IsOccupied == occupied) return;
             IsOccupied = occupied;
+    
+            // Сбрасываем флаги предметов при освобождении клетки
+            if (!occupied)
+            {
+                HasCarrot = false;
+                HasBomb = false;
+                SpawnedObject = null;
+            }
+    
             if (occupied) OnEnter?.Invoke(this); else OnExit?.Invoke(this);
             UpdateVisual();
         }
@@ -37,7 +46,7 @@ namespace Game.Grid
             UpdateVisual();
         }
 
-        private void UpdateVisual()
+        public void UpdateVisual()
         {
             var sr = GetComponent<SpriteRenderer>();
             if (sr != null)

@@ -203,28 +203,29 @@ public class ItemManager : MonoBehaviour
         // Отменяем текущие таски спавна
         carrotSpawningCancellationTokenSource?.Cancel();
         bombSpawningCancellationTokenSource?.Cancel();
-        
+    
         // Пересоздаем CancellationTokenSource для новых тасков
         carrotSpawningCancellationTokenSource?.Dispose();
         bombSpawningCancellationTokenSource?.Dispose();
-        
+    
         carrotSpawningCancellationTokenSource = new CancellationTokenSource();
         bombSpawningCancellationTokenSource = new CancellationTokenSource();
 
+        // Уничтожаем все активные бомбы и морковки
         foreach (var bomb in activeBombs)
         {
-            if (bomb != null)
+            if (bomb != null && bomb.gameObject != null)
                 Destroy(bomb.gameObject);
         }
         activeBombs.Clear();
-        
+    
         foreach (var carrot in activeCarrots)
         {
-            if (carrot != null)
+            if (carrot != null && carrot.gameObject != null)
                 Destroy(carrot.gameObject);
         }
         activeCarrots.Clear();
-        
+
         // Перезапускаем спавн
         SpawnCarrotsAsync(carrotSpawningCancellationTokenSource.Token).Forget();
         SpawnBombsAsync(bombSpawningCancellationTokenSource.Token).Forget();

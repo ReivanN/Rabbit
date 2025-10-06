@@ -18,6 +18,11 @@ namespace Game.Characters
         [SerializeField, Min(0.01f)] private float moveDuration = 0.25f;
         [SerializeField, Min(0f)] private float jumpHeight = 0.35f;
         [SerializeField] private AnimationCurve jumpCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+        
+        [Header("Sound")]
+        [SerializeField] private AudioSource Audio;
+        [SerializeField] private AudioClip jumpSound;
+        [SerializeField] private AudioClip pickUpCarrotSound;
 
         private GridCell currentCell;
         private bool isMoving;
@@ -28,6 +33,7 @@ namespace Game.Characters
         private void Start()
         {
             if (gridManager == null) gridManager = FindObjectOfType<GridManager>();
+            Audio = GetComponent<AudioSource>();
             var startCell = gridManager.GetCell(startCoord) ?? gridManager.GetCell(new Vector2Int(0, 0));
             TeleportToCell(startCell);
         }
@@ -102,6 +108,7 @@ namespace Game.Characters
             if (carrot != null && !carrot.IsCollected)
             {
                 carrot.Collect();
+                Audio.PlayOneShot(pickUpCarrotSound);
             }
         }
 
@@ -131,7 +138,7 @@ namespace Game.Characters
 
         public void Die()
         {
-            // Логика смерти кролика
+            
         }
     }
 }

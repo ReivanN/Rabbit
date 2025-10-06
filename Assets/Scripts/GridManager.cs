@@ -85,5 +85,26 @@ namespace Game.Grid
             }
             return list;
         }
+        
+        public void ResetGrid()
+        {
+            if (cells == null) return;
+
+            for (int x = 0; x < Width; x++)
+            {
+                for (int y = 0; y < Height; y++)
+                {
+                    var cell = cells[x, y];
+                    if (cell != null)
+                    {
+                        cell.HasCarrot = false;
+                        cell.HasBomb = false;
+                        cell.SpawnedObject = null;
+                        cell.SetOccupied(false);
+                        cell.UpdateVisual();
+                    }
+                }
+            }
+        }
     }
 }

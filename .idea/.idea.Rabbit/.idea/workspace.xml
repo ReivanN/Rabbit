@@ -14,7 +14,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
-    <setting file="file://$PROJECT_DIR$/Assets/YandexGamesInitializer.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Assets/Scripts/YandexGamesInitializer.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Library/PackageCache/com.unity.ugui@22ebcc83720a/Runtime/TMP/TextMeshProUGUI.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="ProjectColorInfo">{
@@ -104,7 +104,7 @@
       <option name="presentableId" value="Default" />
       <updated>1759397330987</updated>
       <workItem from="1759397332244" duration="21000" />
-      <workItem from="1759397362191" duration="16219000" />
+      <workItem from="1759397362191" duration="29131000" />
     </task>
     <servers />
   </component>

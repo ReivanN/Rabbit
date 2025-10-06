@@ -116,20 +116,350 @@ TextureImporter:
       name: Wood_circle_game_buttons_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 4167
-        height: 4167
+        x: 192
+        y: 3069
+        width: 945
+        height: 958
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 24fa4c85ad3fc91d0800000000000000
-      internalID: -3342528704298045630
+      spriteID: ce712495f26cf46bab102ed8bfb79feb
+      internalID: 108105042
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Wood_circle_game_buttons_1
+      rect:
+        serializedVersion: 2
+        x: 1137
+        y: 3069
+        width: 945
+        height: 958
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: aa77f49eece3e4401ae725733c43d0d8
+      internalID: -1501267078
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Wood_circle_game_buttons_2
+      rect:
+        serializedVersion: 2
+        x: 2082
+        y: 3069
+        width: 945
+        height: 958
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fdfd11e4b369f41afa370f8e901ccb2d
+      internalID: -595033934
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Wood_circle_game_buttons_3
+      rect:
+        serializedVersion: 2
+        x: 3027
+        y: 3069
+        width: 945
+        height: 958
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 432878e96e9cd490f9ba9ac10a3d77b2
+      internalID: 204712993
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Wood_circle_game_buttons_4
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 2111
+        width: 945
+        height: 958
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7b07097e078c444a9ad458a2ba68f473
+      internalID: 1129791733
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Wood_circle_game_buttons_5
+      rect:
+        serializedVersion: 2
+        x: 1137
+        y: 2111
+        width: 945
+        height: 958
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1170d4075648d4311837e6f9004a9f86
+      internalID: -358396411
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Wood_circle_game_buttons_6
+      rect:
+        serializedVersion: 2
+        x: 2082
+        y: 2111
+        width: 945
+        height: 958
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 319fb12c2b3944b14bdca4f949c692b7
+      internalID: -1158802011
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Wood_circle_game_buttons_7
+      rect:
+        serializedVersion: 2
+        x: 3027
+        y: 2111
+        width: 945
+        height: 958
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 051187859447b42e58b99f96ebb0b724
+      internalID: -1822202562
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Wood_circle_game_buttons_8
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 1153
+        width: 945
+        height: 958
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9114f15be7c4f48f9bede7b450dcbd72
+      internalID: 68330379
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Wood_circle_game_buttons_9
+      rect:
+        serializedVersion: 2
+        x: 1137
+        y: 1153
+        width: 945
+        height: 958
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 83d56fe18718248bd9524c67565ca1ec
+      internalID: 294416764
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Wood_circle_game_buttons_10
+      rect:
+        serializedVersion: 2
+        x: 2082
+        y: 1153
+        width: 945
+        height: 958
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c45cd416040da4f1794bd1e26204bcfd
+      internalID: -2125468263
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Wood_circle_game_buttons_11
+      rect:
+        serializedVersion: 2
+        x: 3027
+        y: 1153
+        width: 945
+        height: 958
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b72ee60519c1143c1b7ae077e4ca3f3f
+      internalID: 196959861
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Wood_circle_game_buttons_12
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 195
+        width: 945
+        height: 958
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 17b9379b7ab52462eb446f399e0da3c2
+      internalID: -91277675
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Wood_circle_game_buttons_13
+      rect:
+        serializedVersion: 2
+        x: 1137
+        y: 195
+        width: 945
+        height: 958
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7e61d9cab96ee4ec5ae6a7df32ab3104
+      internalID: 232325218
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Wood_circle_game_buttons_14
+      rect:
+        serializedVersion: 2
+        x: 2082
+        y: 195
+        width: 945
+        height: 958
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ef810afd4d099402e812073b7843692b
+      internalID: -239279693
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Wood_circle_game_buttons_15
+      rect:
+        serializedVersion: 2
+        x: 3027
+        y: 195
+        width: 945
+        height: 958
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b92e9fccda9a540d6b0a750f076913d5
+      internalID: -1958577476
       vertices: []
       indices: 
       edges: []
@@ -138,7 +468,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 958659de09343488a9f7aeffee91dfe7
     internalID: 0
     vertices: []
     indices: 
@@ -147,7 +477,23 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Wood_circle_game_buttons_0: 108105042
+      Wood_circle_game_buttons_1: -1501267078
+      Wood_circle_game_buttons_10: -2125468263
+      Wood_circle_game_buttons_11: 196959861
+      Wood_circle_game_buttons_12: -91277675
+      Wood_circle_game_buttons_13: 232325218
+      Wood_circle_game_buttons_14: -239279693
+      Wood_circle_game_buttons_15: -1958577476
+      Wood_circle_game_buttons_2: -595033934
+      Wood_circle_game_buttons_3: 204712993
+      Wood_circle_game_buttons_4: 1129791733
+      Wood_circle_game_buttons_5: -358396411
+      Wood_circle_game_buttons_6: -1158802011
+      Wood_circle_game_buttons_7: -1822202562
+      Wood_circle_game_buttons_8: 68330379
+      Wood_circle_game_buttons_9: 294416764
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

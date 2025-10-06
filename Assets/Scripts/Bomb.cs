@@ -12,6 +12,7 @@ public class Bomb : MonoBehaviour
     [SerializeField] private GameObject explosionEffect;
     [SerializeField] private Transform bombModel;
     [SerializeField] private SpriteRenderer warningIndicator;
+    [SerializeField] private SpriteRenderer bombSprite;
     [SerializeField] private float levitationHeight = 0.2f;
     [SerializeField] private float levitationDuration = 1f;
     
@@ -237,7 +238,7 @@ public class Bomb : MonoBehaviour
         if (bombModel != null)
         {
             AudioManager.Instance.PlaySFX(explode, source);
-            
+            bombSprite.color = new Color(1f, 1f, 1f, 0f);
             await UniTask.Delay((int)(soundDelayBeforeExplosion * 1000));
             
             Sequence destroySequence = DOTween.Sequence();

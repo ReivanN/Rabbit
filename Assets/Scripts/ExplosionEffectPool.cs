@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
+using YG;
+
 public class ExplosionEffectPool : MonoBehaviour
 {
     [SerializeField] private GameObject explosionEffectPrefab;
@@ -48,6 +50,7 @@ public class ExplosionEffectPool : MonoBehaviour
         }
         
         explosionPool.Enqueue(effect);
+        YG2.InterstitialAdvShow();
     }
 
     public GameObject GetExplosionEffect(Vector3 position)

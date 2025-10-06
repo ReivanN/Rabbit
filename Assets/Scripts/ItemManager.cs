@@ -20,7 +20,17 @@ public class ItemManager : MonoBehaviour
     private List<Carrot> activeCarrots = new List<Carrot>();
     private CancellationTokenSource carrotSpawningCancellationTokenSource;
     private CancellationTokenSource bombSpawningCancellationTokenSource;
-
+    private bool spawningStopped = false;
+    
+    public void StopSpawning()
+    {
+        spawningStopped = true;
+        // Останавливаем корутины спавна, если они есть
+        StopAllCoroutines();
+        
+        // Отменяем UniTask, если используете их для спавна
+        // вашCancellationTokenSource?.Cancel();
+    }
     private void Start()
     {
         carrotSpawningCancellationTokenSource = new CancellationTokenSource();
@@ -89,7 +99,6 @@ public class ItemManager : MonoBehaviour
 
     private async UniTaskVoid SpawnBombsAsync(CancellationToken cancellationToken)
     {
-        // Начальная задержка
         await UniTask.Delay(1000, cancellationToken: cancellationToken);
 
         while (!cancellationToken.IsCancellationRequested)
@@ -144,6 +153,7 @@ public class ItemManager : MonoBehaviour
 
     private void TrySpawnCarrot()
     {
+        if (spawningStopped) return;
         if (activeCarrots.Count >= maxCarrots)
             return;
 
@@ -161,6 +171,7 @@ public class ItemManager : MonoBehaviour
 
     private void TrySpawnBomb()
     {
+        if (spawningStopped) return;
         var cell = GetRandomFreeCell();
         if (cell == null) return;
 
@@ -200,7 +211,7 @@ public class ItemManager : MonoBehaviour
 
     public void ResetGame()
     {
-        // Отменяем текущие таски спавна
+        spawningStopped = false;
         carrotSpawningCancellationTokenSource?.Cancel();
         bombSpawningCancellationTokenSource?.Cancel();
     

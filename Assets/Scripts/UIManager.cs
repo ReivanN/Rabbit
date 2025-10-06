@@ -5,6 +5,7 @@ using DG.Tweening;
 using System.Collections;
 using Game.Characters;
 using UnityEngine.SceneManagement;
+using YG;
 
 public class UIManager : MonoBehaviour
 {

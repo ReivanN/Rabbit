@@ -1230,7 +1230,7 @@ SpriteRenderer:
   m_SortingOrder: 10
   m_Sprite: {fileID: 1960198971559912155, guid: 88d07dc7bba10405f928c6f3918777bb, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_FlipX: 0
+  m_FlipX: 1
   m_FlipY: 0
   m_DrawMode: 0
   m_Size: {x: 1, y: 1}
@@ -1869,6 +1869,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gridManager: {fileID: 0}
   spriteRoot: {fileID: 456279193}
+  animator: {fileID: 456279194}
   startCoord: {x: 0, y: 0}
   moveDuration: 0.25
   jumpHeight: 0.35

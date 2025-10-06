@@ -104,7 +104,7 @@ MonoBehaviour:
   explosionRadius: 1
   explosionEffect: {fileID: 725748389856807714, guid: 4bda94453d2ca7444a0fff05b2d425f5, type: 3}
   bombModel: {fileID: 2342681851798219159}
-  warningIndicator: {fileID: 0}
+  bombSprite: {fileID: 3792245442238862156}
   levitationHeight: 0.1
   levitationDuration: 1
   source: {fileID: 8555158335683885855}

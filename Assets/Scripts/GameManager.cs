@@ -34,6 +34,7 @@ namespace Game.Characters
                 pool.ReturnExplosionEffect(effect);
             }
         }
+        
         private void Start()
         {
             FindAllActiveComponents();
@@ -122,11 +123,40 @@ namespace Game.Characters
             // Отменяем таймер игры
             gameTimerCancellationTokenSource?.Cancel();
             
+            // Останавливаем спавн новых элементов
+            StopAllSpawning();
+            
             //DisableAllComponents();
             rabbit.enabled = false;
             uiManager.ShowGameOver(score);
-            YG2.InterstitialAdvShow();
             Debug.Log("Game Over!  Final Score: " + score);
+            YG2.InterstitialAdvShow();
+        }
+
+        private void StopAllSpawning()
+        {
+            // Останавливаем все менеджеры предметов
+            var itemManagers = FindObjectsOfType<ItemManager>();
+            foreach (var itemManager in itemManagers)
+            {
+                if (itemManager != null)
+                {
+                    itemManager.StopSpawning();
+                }
+            }
+
+            // Останавливаем другие системы спавна, если они есть
+            var spawners = FindObjectsOfType<MonoBehaviour>();
+            foreach (var spawner in spawners)
+            {
+                // Если у объекта есть методы для остановки спавна, вызываем их
+                var spawnerType = spawner.GetType();
+                var stopMethod = spawnerType.GetMethod("StopSpawning");
+                if (stopMethod != null)
+                {
+                    stopMethod.Invoke(spawner, null);
+                }
+            }
         }
 
         public void SetGamePaused(bool paused)

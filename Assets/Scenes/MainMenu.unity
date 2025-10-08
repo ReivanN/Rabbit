@@ -857,7 +857,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 136}
-  m_SizeDelta: {x: 250, y: 70}
+  m_SizeDelta: {x: 285, y: 70}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &384091767
 MonoBehaviour:
@@ -1922,7 +1922,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1002348373}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bdcc2589bf2c8427fbbe91a9d23fabb7, type: 3}
   m_Name: 

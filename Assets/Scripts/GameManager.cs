@@ -130,7 +130,6 @@ namespace Game.Characters
             rabbit.enabled = false;
             uiManager.ShowGameOver(score);
             Debug.Log("Game Over!  Final Score: " + score);
-            YG2.InterstitialAdvShow();
         }
 
         private void StopAllSpawning()
@@ -241,6 +240,7 @@ namespace Game.Characters
             GameTimerAsync(gameTimerCancellationTokenSource.Token).Forget();
 
             Debug.Log("Игра перезапущена!");
+            YG2.InterstitialAdvShow();
         }
 
         private void Update()

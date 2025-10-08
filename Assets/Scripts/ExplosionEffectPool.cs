@@ -50,7 +50,6 @@ public class ExplosionEffectPool : MonoBehaviour
         }
         
         explosionPool.Enqueue(effect);
-        YG2.InterstitialAdvShow();
     }
 
     public GameObject GetExplosionEffect(Vector3 position)

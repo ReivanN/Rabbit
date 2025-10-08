@@ -4,7 +4,7 @@ namespace YG.Insides
     public partial class ProjectSettings
     {
         public bool showFirstAdv = true;
-        public int interAdvInterval = 60;
+        public int interAdvInterval = 0;
         public bool postponeCallByFail;
 
         [ApplySettings]

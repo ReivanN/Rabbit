@@ -501,7 +501,7 @@ public class UIManager : MonoBehaviour
             {
                 scoreProgress += Time.unscaledDeltaTime / textTypingDuration;
                 currentScore = Mathf.FloorToInt(Mathf.Lerp(0, finalScore, scoreProgress));
-                finalScoreText.text = $"SCORE: {currentScore}";
+                finalScoreText.text = $": {currentScore}";
 
                 // Добавляем эффект "прыжка" для цифр
                 if (currentScore % 5 == 0 || currentScore == finalScore)
@@ -515,7 +515,7 @@ public class UIManager : MonoBehaviour
             }
 
             // Финальное значение
-            finalScoreText.text = $"SCORE: {finalScore}";
+            finalScoreText.text =$":{finalScore}";
         }
     }
 
